@@ -81,4 +81,94 @@ describe("Order repository test", () => {
       ],
     });
   });
+
+  it("should update an order", async () => {
+    const customerRepository = new CustomerRepository();
+    const customer = new Customer("20", "hugo");
+    const address = new Address("Rua teste", 46, "37310810", "BH");
+
+    customer.changeAddress(address);    
+    await customerRepository.create(customer);
+
+    const productRepository = new ProductRepository();
+    const laptop = new Product("1", "Alienware X17 R3", 2000)
+    const nintendoSwitch = new Product("2", "Nintendo Switch PRO 4K", 400)
+    
+    await productRepository.create(laptop);
+    await productRepository.create(nintendoSwitch);
+
+    const orderItem1 = new OrderItem(
+      "1",
+      laptop.name,
+      laptop.price,
+      laptop.id,
+      1
+    );
+
+    const orderItem2 = new OrderItem(
+      "2",
+      nintendoSwitch.name,
+      nintendoSwitch.price,
+      nintendoSwitch.id,
+      3
+    );
+
+    const orderRepository = new OrderRepository();
+    const order = new Order("141210", customer.id, [orderItem1]);
+    await orderRepository.create(order);
+
+    const orderModelCreate = await OrderModel.findOne(
+      { where: { id: order.id },
+      include: ["items"],
+    });
+
+    expect(orderModelCreate.toJSON()).toStrictEqual({
+      id: order.id,
+      customer_id: order.customerId,
+      total: order.total(),
+      items: [
+        {
+          id: orderItem1.id,
+          name: orderItem1.name,
+          price: orderItem1.price,
+          quantity: orderItem1.quantity,
+          order_id: "141210",
+          product_id: orderItem1.productId,
+        }
+      ]
+    });
+
+    order.changeItems([orderItem1, orderItem2]);
+    await orderRepository.update(order);
+
+    const orderModel = await OrderModel.findOne(
+      { where: { id: order.id },
+      include: ["items"],
+    });
+
+    expect(orderModel.toJSON()).toStrictEqual({
+        id: order.id,
+        customer_id: order.customerId,
+        total: order.total(),
+        items: [
+          {
+            id: orderItem1.id,
+            name: orderItem1.name,
+            price: orderItem1.price,
+            quantity: orderItem1.quantity,
+            order_id: "141210",
+            product_id: orderItem1.productId,
+          },
+          {
+            id: orderItem2.id,
+            name: orderItem2.name,
+            price: orderItem2.price,
+            quantity: orderItem2.quantity,
+            order_id: "141210",
+            product_id: orderItem2.productId,
+          }
+        ]
+      });
+  });
+
 });
