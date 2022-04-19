@@ -171,4 +171,94 @@ describe("Order repository test", () => {
       });
   });
 
+  it("should find an order", async () => {
+    const customerRepository = new CustomerRepository();
+    const customer = new Customer("20", "hugo");
+    const address = new Address("Rua teste", 46, "37310810", "BH");
+
+    customer.changeAddress(address);    
+    await customerRepository.create(customer);
+
+    const productRepository = new ProductRepository();
+    const laptop = new Product("1", "Alienware X17 R3", 2000);
+    
+    await productRepository.create(laptop);
+
+    const orderItem1 = new OrderItem(
+      "1",
+      laptop.name,
+      laptop.price,
+      laptop.id,
+      1
+    );
+
+    const orderRepository = new OrderRepository();
+    const order = new Order("141210", customer.id, [orderItem1]);
+    await orderRepository.create(order);
+
+    const foundOrder = await orderRepository.find("141210");
+
+    expect(foundOrder).toEqual(order);
+  });
+
+  it("should find all orders", async () => {
+    const customerRepository = new CustomerRepository();
+    const customer = new Customer("20", "hugo");
+    const address = new Address("Rua teste", 46, "37310810", "BH");
+
+    const customer2 = new Customer("21", "dani");
+    const address2 = new Address("Rua testando", 39, "37310850", "BH");
+
+    customer.changeAddress(address);
+    customer2.changeAddress(address2);
+
+    await customerRepository.create(customer);
+    await customerRepository.create(customer2);
+
+    const productRepository = new ProductRepository();
+    const laptop = new Product("1", "Alienware X17 R3", 2000)
+    const nintendoSwitch = new Product("2", "Nintendo Switch PRO 4K", 400)
+    
+    await productRepository.create(laptop);
+    await productRepository.create(nintendoSwitch);
+
+    const orderItem1 = new OrderItem(
+      "1",
+      laptop.name,
+      laptop.price,
+      laptop.id,
+      1
+    );
+
+    const orderItem2 = new OrderItem(
+      "2",
+      nintendoSwitch.name,
+      nintendoSwitch.price,
+      nintendoSwitch.id,
+      3
+    );
+
+    const orderItem3 = new OrderItem(
+      "3",
+      nintendoSwitch.name,
+      nintendoSwitch.price,
+      nintendoSwitch.id,
+      1
+    );
+
+    const orderRepository = new OrderRepository();
+    const order = new Order("141210", customer.id, [orderItem1, orderItem2]);
+    const order2 = new Order("141211", customer2.id, [orderItem3]);
+
+    await orderRepository.create(order);
+    await orderRepository.create(order2);
+
+    const orders = [order, order2];
+
+    const foundOrders = await orderRepository.findAll();
+
+    expect(foundOrders).toEqual(orders);
+
+  });
+
 });
